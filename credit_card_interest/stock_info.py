@@ -4,10 +4,14 @@ from currency_converter import CurrencyConverter as cc
 import requests
 
 
-def calculate_total_money_in_sp500(term_in_months, amount_invested_monthly):
+def calculate_total_money_in_sp500(term_in_months, amount_invested_monthly, average_dividends_percentage = 0):
     sp = yf.Ticker("^GSPC")
     amount_of_shares = 0
     amount_invested = 0
+    dividends = 0
+    
+    if average_dividends_percentage > 1:
+        average_dividends_percentage = average_dividends_percentage / 100
     shares = {
         "Shares_Owned": [], 
         "Dollar_Amount": [],
@@ -17,6 +21,10 @@ def calculate_total_money_in_sp500(term_in_months, amount_invested_monthly):
         }
     
     for i, row in sp.history(period=str(term_in_months)+"mo", interval="1mo").iterrows():
+        dividends += 1
+        if dividends % 3 == 0 and average_dividends_percentage != 0:
+            amount_of_shares += (amount_of_shares * row["High"] * average_dividends_percentage)/row["High"]
+        
         amount_of_shares += amount_invested_monthly / row["High"]
         amount_invested += amount_invested_monthly
         shares["Shares_Owned"].append(amount_of_shares)
@@ -25,17 +33,22 @@ def calculate_total_money_in_sp500(term_in_months, amount_invested_monthly):
         shares["Stock_Price"].append(row["High"])
         shares["Amount_Invested"].append(amount_invested)
         
-        
     return shares
     
-def create_csv_of_sp500_investment(term_in_months, amount_invested_monthly, filepath):
-    shares_timeperiod_calculated = calculate_total_money_in_sp500(term_in_months, amount_invested_monthly)
+def create_csv_of_sp500_investment(term_in_months, amount_invested_monthly, filepath, dividend_percentage_quarterly = 0):
+    shares_timeperiod_calculated = calculate_total_money_in_sp500(term_in_months, amount_invested_monthly, dividend_percentage_quarterly)
     pd.DataFrame(data=shares_timeperiod_calculated).to_csv(filepath,index=False)
     
 
 create_csv_of_sp500_investment(240, 500, "sp500_invested_over_20_years.csv")    
 create_csv_of_sp500_investment(240, 1000, "sp1000_invested_over_20_years.csv")     
- 
+
+create_csv_of_sp500_investment(240, 500,"sp500_invested_over_20_years_dividends_reinvested.csv", 0.00375)    
+create_csv_of_sp500_investment(240, 1000,"sp1000_invested_over_20_years_dividends_reinvested.csv", 0.00375)
+
+create_csv_of_sp500_investment(360, 500,"sp500_invested_over_30_years_dividends_reinvested.csv", 0.00375)    
+create_csv_of_sp500_investment(360, 1000,"sp1000_invested_over_30_years_dividends_reinvested.csv", 0.00375)      
+
 sp = yf.Ticker("vfv.to")
 
 sp.history(period="12mo").to_csv("vfv_stock_price.csv")
