@@ -49,9 +49,7 @@ debts_avalance = [
 
 debt_df = pd.DataFrame(data = debts_snowball)
 
-print(debt_df)
 def payoff_debt(debts, amount_put_towards_debts_monthly, snowball_method = True):
-    print(debts)
     res = {
         'month': [0],
         'total_remaining': [calc_total_debt_remaining(debts)],
@@ -61,24 +59,24 @@ def payoff_debt(debts, amount_put_towards_debts_monthly, snowball_method = True)
         debts = sorted(debts, key=lambda x: x["total_owed"])
     else:
         debts = sorted(debts, key=lambda x: x["interest_rate"])[::-1]
+    
     month = 0
     
     for i in range(len(debts)):
         monthly_amount_left_over = 0
-        total_remaining = debts[i]["total_owed"]
         while debts[i]["total_owed"] > 0:
+            month += 1
+            
             # add interest
             interest = add_interest_on_all_debts(debts)
             
-            month += 1
             # take away monthly amount
             remaining = debts[i]['total_owed'] - amount_put_towards_debts_monthly - monthly_amount_left_over
             if remaining < 0:
                 monthly_amount_left_over = abs(remaining)
             
-            
             # append all the calculated_values
-            res['total_remaining'].append(calc_total_debt_remaining(debts))
+            res['total_remaining'].append(max(calc_total_debt_remaining(debts)-amount_put_towards_debts_monthly, 0))
             res['month'].append(month)
             res['interest_paid'].append(res['interest_paid'][-1] + interest)
             
@@ -104,6 +102,10 @@ def add_interest_on_all_debts(debts):
     return interest
         
 
-print(payoff_debt(debts_snowball, 1000, True))
-print("\n\n\n\n\n")
-print(payoff_debt(debts_avalance, 1000, False))
+snowball_df = pd.DataFrame(data=payoff_debt(debts_snowball, 1000, True))
+avalance_df = pd.DataFrame(data=payoff_debt(debts_avalance, 1000, False))
+
+
+debt_df.to_csv("initial_debts.csv",index=False)
+snowball_df.to_csv("snowball_debt.csv",index=False)
+avalance_df.to_csv("avalance_debt.csv",index=False)
