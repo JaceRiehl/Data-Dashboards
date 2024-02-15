@@ -70,21 +70,26 @@ def payoff_debt(debts, amount_put_towards_debts_monthly, snowball_method = True)
             # add interest
             interest = add_interest_on_all_debts(debts)
             
+            # pay the monthly amounts on every debt
+            print(amount_put_towards_debts_monthly)
+            amount_left_over_after_minimum_payments = pay_minimum_payments(debts, amount_put_towards_debts_monthly)
+            print(amount_left_over_after_minimum_payments)
             # take away monthly amount
-            remaining = debts[i]['total_owed'] - amount_put_towards_debts_monthly - monthly_amount_left_over
+            remaining = debts[i]['total_owed'] - amount_left_over_after_minimum_payments - monthly_amount_left_over
             if remaining < 0:
                 monthly_amount_left_over = abs(remaining)
             
             # append all the calculated_values
-            res['total_remaining'].append(max(calc_total_debt_remaining(debts)-amount_put_towards_debts_monthly, 0))
+            res['total_remaining'].append(max(calc_total_debt_remaining(debts)-amount_left_over_after_minimum_payments, 0))
             res['month'].append(month)
             res['interest_paid'].append(res['interest_paid'][-1] + interest)
             
             # reduce debt
-            if debts[i]['total_owed'] - amount_put_towards_debts_monthly < 0:
+            if debts[i]['total_owed'] - amount_left_over_after_minimum_payments < 0:
                 debts[i]['total_owed'] = 0
             else:
-                debts[i]['total_owed'] = debts[i]['total_owed'] - amount_put_towards_debts_monthly
+                debts[i]['total_owed'] = debts[i]['total_owed'] - amount_left_over_after_minimum_payments
+        print(debts)
     return res
 
 def calc_total_debt_remaining(debts):
@@ -100,6 +105,15 @@ def add_interest_on_all_debts(debts):
         i['total_owed'] += interest
         total_interest_added += interest
     return interest
+
+def pay_minimum_payments(debts, monthly_amount):
+    leftover = monthly_amount
+    for debt in debts:
+        if debt['total_owed'] > 0:
+            debt['total_owed'] -= debt['monthly_payment'] 
+            leftover -= debt['monthly_payment']
+    return leftover
+    
         
 
 snowball_df = pd.DataFrame(data=payoff_debt(debts_snowball, 1000, True))
