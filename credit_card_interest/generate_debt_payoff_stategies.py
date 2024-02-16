@@ -8,11 +8,8 @@ def payoff_debt(debts, amount_put_towards_debts_monthly, snowball_method = True)
         'total_remaining': [calc_total_debt_remaining(debts)],
         'interest_paid': [0],
     }
-    if snowball_method:
-        debts = sorted(debts, key=lambda x: x["total_owed"])
-    else:
-        debts = sorted(debts, key=lambda x: x["interest_rate"])[::-1]
     
+    debts = sort_debts_by_payoff_method(debts, snowball_method)
     month = 0
     
     for i in range(len(debts)):
@@ -22,8 +19,7 @@ def payoff_debt(debts, amount_put_towards_debts_monthly, snowball_method = True)
             
             # add interest
             interest = add_interest_on_all_debts(debts)
-            print(interest)
-            # print(interest)
+            
             # pay the monthly amounts on every debt
             amount_left_over_after_minimum_payments = pay_minimum_payments(debts, amount_put_towards_debts_monthly)
             
@@ -44,6 +40,12 @@ def payoff_debt(debts, amount_put_towards_debts_monthly, snowball_method = True)
                 debts[i]['total_owed'] = debts[i]['total_owed'] - amount_left_over_after_minimum_payments
     return res
 
+def sort_debts_by_payoff_method(debts, snowball_method):
+    if snowball_method:
+        debts = sorted(debts, key=lambda x: x["total_owed"])
+    else:
+        debts = sorted(debts, key=lambda x: x["interest_rate"])[::-1]
+    return debts
 def calc_total_debt_remaining(debts):
     total_debts = 0
     for i in debts:
@@ -75,7 +77,6 @@ debts_snowball = read_debt_data("initial_debts.csv")
 debts_avalance = read_debt_data("initial_debts.csv")
 
 snowball_df = pd.DataFrame(data=payoff_debt(debts_snowball, 1000, True))
-print("\n")
 avalance_df = pd.DataFrame(data=payoff_debt(debts_avalance, 1000, False))
 
 snowball_df.to_csv("snowball_debt.csv",index=False)
