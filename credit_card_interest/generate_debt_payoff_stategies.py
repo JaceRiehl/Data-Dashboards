@@ -1,53 +1,6 @@
 
 import pandas as pd
-
-debts_snowball = [
-    {
-        "monthly_payment": 10,
-        "total_owed": 2000,
-        "interest_rate": 0.15,
-    },
-    {
-        "monthly_payment": 10,
-        "total_owed": 3000,
-        "interest_rate": 0.20,
-    },
-    {
-        "monthly_payment": 10,
-        "total_owed": 5000,
-        "interest_rate": 0.25,
-    },
-    {
-        "monthly_payment": 10,
-        "total_owed": 10000,
-        "interest_rate": 0.3,
-    },
-]
-
-debts_avalance = [
-    {
-        "monthly_payment": 10,
-        "total_owed": 2000,
-        "interest_rate": 0.15,
-    },
-    {
-        "monthly_payment": 10,
-        "total_owed": 3000,
-        "interest_rate": 0.20,
-    },
-    {
-        "monthly_payment": 10,
-        "total_owed": 5000,
-        "interest_rate": 0.25,
-    },
-    {
-        "monthly_payment": 10,
-        "total_owed": 10000,
-        "interest_rate": 0.3,
-    },
-]
-
-debt_df = pd.DataFrame(data = debts_snowball)
+import csv
 
 def payoff_debt(debts, amount_put_towards_debts_monthly, snowball_method = True):
     res = {
@@ -69,11 +22,11 @@ def payoff_debt(debts, amount_put_towards_debts_monthly, snowball_method = True)
             
             # add interest
             interest = add_interest_on_all_debts(debts)
-            
+            print(interest)
+            # print(interest)
             # pay the monthly amounts on every debt
-            print(amount_put_towards_debts_monthly)
             amount_left_over_after_minimum_payments = pay_minimum_payments(debts, amount_put_towards_debts_monthly)
-            print(amount_left_over_after_minimum_payments)
+            
             # take away monthly amount
             remaining = debts[i]['total_owed'] - amount_left_over_after_minimum_payments - monthly_amount_left_over
             if remaining < 0:
@@ -89,7 +42,6 @@ def payoff_debt(debts, amount_put_towards_debts_monthly, snowball_method = True)
                 debts[i]['total_owed'] = 0
             else:
                 debts[i]['total_owed'] = debts[i]['total_owed'] - amount_left_over_after_minimum_payments
-        print(debts)
     return res
 
 def calc_total_debt_remaining(debts):
@@ -104,7 +56,7 @@ def add_interest_on_all_debts(debts):
         interest = round(i['total_owed'] * (i['interest_rate'] / 12))
         i['total_owed'] += interest
         total_interest_added += interest
-    return interest
+    return total_interest_added
 
 def pay_minimum_payments(debts, monthly_amount):
     leftover = monthly_amount
@@ -114,12 +66,17 @@ def pay_minimum_payments(debts, monthly_amount):
             leftover -= debt['monthly_payment']
     return leftover
     
+def read_debt_data(filename):
+    data = pd.read_csv(filename)
+    data_dict = data.to_dict(orient='records')
+    return data_dict
         
+debts_snowball = read_debt_data("initial_debts.csv")
+debts_avalance = read_debt_data("initial_debts.csv")
 
 snowball_df = pd.DataFrame(data=payoff_debt(debts_snowball, 1000, True))
+print("\n")
 avalance_df = pd.DataFrame(data=payoff_debt(debts_avalance, 1000, False))
 
-
-debt_df.to_csv("initial_debts.csv",index=False)
 snowball_df.to_csv("snowball_debt.csv",index=False)
 avalance_df.to_csv("avalance_debt.csv",index=False)
