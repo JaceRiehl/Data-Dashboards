@@ -1,6 +1,5 @@
 
 import pandas as pd
-import csv
 
 def payoff_debt(debts, amount_put_towards_debts_monthly, snowball_method = True):
     res = {
